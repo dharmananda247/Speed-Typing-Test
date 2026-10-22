@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code.with_dj | Typing Speed Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f021f 0%, #2a0845 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #ffffff;
+        }
+
+        .typing-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(168, 85, 247, 0.15);
+            position: relative;
+        }
+
+        .user-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #7e22ce;
+            color: #fff;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(126, 34, 206, 0.4);
+            border: 1px solid #a855f7;
+            white-space: nowrap;
+        }
+
+        /* Stats Header */
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(168, 85, 247, 0.1);
+        }
+
+        .stat-box { text-align: center; flex: 1; }
+        .stat-box:not(:last-child) { border-right: 1px solid rgba(168, 85, 247, 0.2); }
+        
+        .stat-label { font-size: 12px; color: #d8b4fe; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 22px; font-weight: bold; color: #e9d5ff; text-shadow: 0 0 10px rgba(168, 85, 247, 0.5); }
+
+        /* Typing Area */
+        .text-display {
+            font-size: 20px;
+            line-height: 1.6;
+            color: rgba(216, 180, 254, 0.4);
+            margin-bottom: 20px;
+            position: relative;
+            user-select: none;
+            word-break: break-word;
+        }
+
+        .text-display span { transition: all 0.1s; }
+        
+        /* Dynamic Character Colors */
+        .text-display span.correct { color: #10b981; text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+        .text-display span.incorrect { color: #ef4444; background: rgba(239, 68, 68, 0.2); border-radius: 2px; }
+        .text-display span.active { border-bottom: 2px solid #a855f7; animation: blink 1s infinite; }
+
+        @keyframes blink {
+            50% { border-bottom-color: transparent; }
+        }
+
+        /* Hidden Input */
+        #hidden-input {
+            position: absolute;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        /* Overlay when test is not focused */
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 2, 31, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e9d5ff;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .overlay.hidden { display: none; }
+
+        /* Restart Button */
+        .restart-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #7e22ce, #a855f7);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.3);
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            box-shadow: 0 4px 25px rgba(168, 85, 247, 0.6);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="typing-card" id="card">
+        <div class="user-badge">Code.with_dj</div>
+        
+        <div class="stats-header">
+            <div class="stat-box">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="time">0s</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">WPM</div>
+                <div class="stat-value" id="wpm">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">100%</div>
+            </div>
+        </div>
+
+        <div class="text-display" id="text-display">
+            <!-- Letters will be injected via JS -->
+        </div>
+
+        <input type="text" id="hidden-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+        <button class="restart-btn" onclick="resetTest()">Restart Test</button>
+
+        <div class="overlay" id="overlay" onclick="startTest()">
+            Click here to start typing!
+        </div>
+    </div>
+
+    <script>
+        const textDisplay = document.getElementById('text-display');
+        const hiddenInput = document.getElementById('hidden-input');
+        const overlay = document.getElementById('overlay');
+        const timeEl = document.getElementById('time');
+        const wpmEl = document.getElementById('wpm');
+        const accuracyEl = document.getElementById('accuracy');
+
+        const sentences = [
+            "The quick brown fox jumps over the lazy dog and runs into the forest.",
+            "JavaScript is a powerful programming language used to build interactive websites.",
+            "Coding requires patience, practice, and a willingness to learn from mistakes.",
+            "The purple glassmorphism theme looks incredibly modern and professional.",
+            "Success is not final, failure is not fatal: it is the courage to continue that counts."
+        ];
+
+        let currentText = "";
+        let time = 0;
+        let timer = null;
+        let isTyping = false;
+        let totalTyped = 0;
+        let errors = 0;
+
+        function loadText() {
+            // Pick a random sentence
+            const randomIndex = Math.floor(Math.random() * sentences.length);
+            currentText = sentences[randomIndex];
+            
+            // Split text into individual character spans
+            textDisplay.innerHTML = "";
+            currentText.split("").forEach((char, index) => {
+                const span = document.createElement('span');
+                // Handle spaces so they don't collapse in HTML
+                span.textContent = char === " " ? "\u00A0" : char; 
+                if (index === 0) span.classList.add('active');
+                textDisplay.appendChild(span);
+            });
+        }
+
+        function startTest() {
+            overlay.classList.add('hidden');
+            hiddenInput.focus();
+            resetStats();
+            loadText();
+            
+            timer = setInterval(() => {
+                time++;
+                timeEl.textContent = time + 's';
+                calculateStats();
+            }, 1000);
+        }
+
+        function resetStats() {
+            clearInterval(timer);
+            time = 0;
+            totalTyped = 0;
+            errors = 0;
+            isTyping = false;
+            hiddenInput.value = "";
+            timeEl.textContent = "0s";
+            wpmEl.textContent = "0";
+            accuracyEl.textContent = "100%";
+        }
+
+        function resetTest() {
+            resetStats();
+            overlay.classList.remove('hidden');
+            textDisplay.innerHTML = "";
+        }
+
+        hiddenInput.addEventListener('input', (e) => {
+            if (!isTyping) isTyping = true;
+            
+            const typedText = hiddenInput.value;
+            const characters = textDisplay.querySelectorAll('span');
+            
+            // Remove active class from all
+            characters.forEach(span => span.classList.remove('active'));
+
+            // Loop through typed text
+            for (let i = 0; i < typedText.length; i++) {
+                if (i < characters.length) {
+                    characters[i].classList.remove('correct', 'incorrect');
+                    if (typedText[i] === currentText[i]) {
+                        characters[i].classList.add('correct');
+                    } else {
+                        characters[i].classList.add('incorrect');
+                    }
+                }
+            }
+
+            // Set active class to the next character
+            if (typedText.length < characters.length) {
+                characters[typedText.length].classList.add('active');
+            } else {
+                // Test finished!
+                clearInterval(timer);
+                overlay.textContent = "Test Completed! Click to try again.";
+                overlay.classList.remove('hidden');
+                overlay.onclick = resetTest;
+            }
+            
+            totalTyped = typedText.length;
+            calculateStats();
+        });
+
+        function calculateStats() {
+            if (time === 0) return;
+
+            // Calculate WPM (Standard formula: (Characters typed / 5) / Minutes)
+            const wordsTyped = totalTyped / 5;
+            const minutes = time / 60;
+            const wpm = Math.round(wordsTyped / minutes);
+            
+            // Calculate Accuracy
+            let currentErrors = 0;
+            const typedText = hiddenInput.value;
+            for (let i = 0; i < typedText.length; i++) {
+                if (typedText[i] !== currentText[i]) currentErrors++;
+            }
+            
+            let accuracy = 100;
+            if (totalTyped > 0) {
+                accuracy = Math.round(((totalTyped - currentErrors) / totalTyped) * 100);
+            }
+
+            wpmEl.textContent = wpm || 0;
+            accuracyEl.textContent = accuracy + "%";
+        }
+
+        // Catch clicks anywhere on the card to focus the hidden input
+        document.getElementById('card').addEventListener('click', () => {
+            if (!overlay.classList.contains('hidden')) return;
+            hiddenInput.focus();
+        });
+    </script>
+
+</body>
+</html>
